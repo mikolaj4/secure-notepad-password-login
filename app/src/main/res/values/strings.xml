@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">BSM-notatnik</string>
+    <string name="login_title">Login</string>
+    <string name="register_title">Register</string>
+    <string name="email_hint">email</string>
+    <string name="password_hint">password</string>
+    <string name="login_btn">Login</string>
+    <string name="register_btn">Register</string>
+    <string name="click_to_login">Click to login</string>
+    <string name="click_to_register">Click to register</string>
+    <string name="logout_btn_txt">logout</string>
+</resources>

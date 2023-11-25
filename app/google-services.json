@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "973573037765",
+    "project_id": "bsm-notatnik",
+    "storage_bucket": "bsm-notatnik.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973573037765:android:8db5442018c92f94d59aac",
+        "android_client_info": {
+          "package_name": "com.example.bsm_notatnik"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCbedeIw3ERk5o_k3HnFKyVcW3ESd5nxA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
