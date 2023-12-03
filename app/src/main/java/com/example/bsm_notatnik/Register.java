@@ -7,13 +7,23 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
 
+import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,7 +100,13 @@ public class Register extends AppCompatActivity {
                     return;
                 }
 
-                saveNewUser(email, password);
+
+                byte[] salt = generateSalt();
+                saveSaltForUser(email, salt);
+
+                String hashPassword = hashPassword(password, salt);
+                saveNewUser(email, hashPassword);
+
                 Toast.makeText(Register.this, "Konto utworzone z email: " + email + " oraz hasłem: " + password, Toast.LENGTH_SHORT).show();
                 editTextEmail.setText("");
                 editTextPassword.setText("");
@@ -125,6 +141,39 @@ public class Register extends AppCompatActivity {
         Matcher matcher = pattern.matcher(password);
 
         return matcher.matches();
+    }
+
+    private void saveSaltForUser(String email, byte[] salt){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String saltString = Base64.getEncoder().encodeToString(salt);
+        editor.putString("salt_" + email, saltString);
+        editor.apply();
+    }
+
+    private static byte[] generateSalt(){
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        return salt;
+    }
+
+    private static String hashPassword(String password, byte[] salt){
+        int iteratiions = 1000;
+        int keyLen = 256;
+
+        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, iteratiions, keyLen);
+        try{
+            SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            SecretKey secretKey = secretKeyFactory.generateSecret(keySpec);
+            byte[] hashedPassword = secretKey.getEncoded();
+            return Base64.getEncoder().encodeToString(hashedPassword);
+
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 

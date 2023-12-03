@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showPasswordChangeDialog(){
-// Inflate the dialog layout
+        // Inflate the dialog layout
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.password_change_dialog, null);
 
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                // User canceled the password change
+                dialogInterface.dismiss();
             }
         });
 

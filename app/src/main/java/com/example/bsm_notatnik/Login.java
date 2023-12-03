@@ -21,7 +21,15 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
 import java.util.Objects;
+
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class Login extends AppCompatActivity {
 
@@ -90,9 +98,15 @@ public class Login extends AppCompatActivity {
 
     private void login(String email, String password){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        String passwordFromData = sharedPreferences.getString("user_" + email, "err");
+        String passwordHashFromData = sharedPreferences.getString("user_" + email, "err");
 
-        if (password.equals(passwordFromData)){
+        byte[] salt = getSaltForUser(email);
+
+        String inputPasswordHash = hashPassword(password, salt);
+
+        assert inputPasswordHash != null;
+
+        if (inputPasswordHash.equals(passwordHashFromData)){
             Toast.makeText(getApplicationContext(), "Login Successful", Toast.LENGTH_SHORT).show();
 
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
@@ -103,6 +117,29 @@ public class Login extends AppCompatActivity {
         }else {
             Toast.makeText(getApplicationContext(), "Wrong credentials!", Toast.LENGTH_SHORT).show();
             editTextPassword.setText("");
+        }
+    }
+
+    private byte[] getSaltForUser(String email){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
+        String saltFromData = sharedPreferences.getString("salt_" + email, "err");
+        return Base64.getDecoder().decode(saltFromData);
+    }
+
+    private static String hashPassword(String password, byte[] salt){
+        int iteratiions = 1000;
+        int keyLen = 256;
+
+        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, iteratiions, keyLen);
+        try{
+            SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            SecretKey secretKey = secretKeyFactory.generateSecret(keySpec);
+            byte[] hashedPassword = secretKey.getEncoded();
+            return Base64.getEncoder().encodeToString(hashedPassword);
+
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
