@@ -2,12 +2,10 @@ package com.example.bsm_notatnik;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,13 +15,15 @@ import android.widget.Toast;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
 
-import java.security.SecureRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,7 +67,8 @@ public class Register extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //progressBar.setVisibility(View.VISIBLE);
-                String email, password;
+                String email, hashedEmail, password, hashedPassword;
+
                 email = String.valueOf(editTextEmail.getText());
                 password = String.valueOf(editTextPassword.getText());
 
@@ -81,8 +82,11 @@ public class Register extends AppCompatActivity {
                     Toast.makeText(Register.this, "Enter password!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
+                hashedEmail = hashEmail(email);
+
                 //checks if given username is already registered in database
-                if (checkIfUserExists(email)){
+                if (checkIfUserExists(hashedEmail)){
                     editTextEmail.setText("");
                     editTextPassword.setText("");
                     Toast.makeText(Register.this, "Account with this username already exists!", Toast.LENGTH_SHORT).show();
@@ -101,11 +105,13 @@ public class Register extends AppCompatActivity {
                 }
 
 
-                byte[] salt = generateSalt();
-                saveSaltForUser(email, salt);
 
-                String hashPassword = hashPassword(password, salt);
-                saveNewUser(email, hashPassword);
+                byte[] salt = generateSalt();
+                saveSaltForUser(hashedEmail, salt);
+
+                hashedPassword = hashCredential(password, salt);
+
+                saveNewUser(hashedEmail, hashedPassword);
 
                 Toast.makeText(Register.this, "Konto utworzone z email: " + email + " oraz hasłem: " + password, Toast.LENGTH_SHORT).show();
                 editTextEmail.setText("");
@@ -115,16 +121,10 @@ public class Register extends AppCompatActivity {
     }
 
 
-    private void saveNewUser(String email, String password){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("user_" + email, password);
-        editor.apply();
-    }
 
-    private boolean checkIfUserExists(String email){
+    private boolean checkIfUserExists(String hashedemail){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        return sharedPreferences.contains("user_" + email);
+        return sharedPreferences.contains("user_" + hashedemail);
     }
 
     private boolean validateEmail(String email){
@@ -143,13 +143,11 @@ public class Register extends AppCompatActivity {
         return matcher.matches();
     }
 
-    private void saveSaltForUser(String email, byte[] salt){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+    private String hashEmail(String email){
+        byte[] emailSalt;
+        emailSalt = getFirst16BytesOfHash(email);
 
-        String saltString = Base64.getEncoder().encodeToString(salt);
-        editor.putString("salt_" + email, saltString);
-        editor.apply();
+        return hashCredential(email, emailSalt);
     }
 
     private static byte[] generateSalt(){
@@ -159,18 +157,56 @@ public class Register extends AppCompatActivity {
         return salt;
     }
 
-    private static String hashPassword(String password, byte[] salt){
+    private void saveSaltForUser(String hashedemail, byte[] salt){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        String saltString = Base64.getEncoder().encodeToString(salt);
+        editor.putString("salt_" + hashedemail, saltString);
+        editor.apply();
+    }
+
+    private void saveNewUser(String hashedemail, String password){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("user_" + hashedemail, password);
+        editor.apply();
+    }
+
+
+
+    private static String hashCredential(String credential, byte[] salt){
         int iteratiions = 1000;
         int keyLen = 256;
 
-        KeySpec keySpec = new PBEKeySpec(password.toCharArray(), salt, iteratiions, keyLen);
+        KeySpec keySpec = new PBEKeySpec(credential.toCharArray(), salt, iteratiions, keyLen);
         try{
             SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
             SecretKey secretKey = secretKeyFactory.generateSecret(keySpec);
-            byte[] hashedPassword = secretKey.getEncoded();
-            return Base64.getEncoder().encodeToString(hashedPassword);
+            byte[] hashedCredential = secretKey.getEncoded();
+            return Base64.getEncoder().encodeToString(hashedCredential);
 
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private byte[] getFirst16BytesOfHash(String input){
+        try {
+            // Create MessageDigest instance for SHA-256
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+            // Get the hash value by updating the digest with the input bytes
+            byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+            // Truncate the hash to the first 16 bytes
+            byte[] truncatedHash = new byte[16];
+            System.arraycopy(hashBytes, 0, truncatedHash, 0, 16);
+
+            return truncatedHash;
+        } catch (NoSuchAlgorithmException e) {
+            // Handle the exception (e.g., print an error message)
             e.printStackTrace();
             return null;
         }
