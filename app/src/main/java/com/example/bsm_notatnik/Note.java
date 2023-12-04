@@ -4,11 +4,13 @@ public class Note {
     private String title;
     private String content;
 
+    private int id;
+
     public Note(){
 
     }
 
-    public Note(String title, String content){
+    public Note(String title, String content, int id){
         this.title = title;
         this.content = content;
     }
@@ -28,4 +30,5 @@ public class Note {
     public void setContent(String content) {
         this.content = content;
     }
+
 }

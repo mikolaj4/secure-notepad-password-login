@@ -1,4 +1,5 @@
 package com.example.bsm_notatnik;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -28,8 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String SHARED_NAME_CREDENTIALS = "Credentials";
     private static final String SHARED_NOTES_NAME = "Notes";
 
-    private static final String KEY_NOTE_COUNT = "NoteCount";
-
     private static String HASHED_EMAIL = "";
 
     private List<Note> noteList;
@@ -50,30 +49,19 @@ public class MainActivity extends AppCompatActivity {
         loadNotesFromPreferences();
         displayNotes();
 
-
-
-
-
         buttonLogout = findViewById(R.id.btn_logout);
         buttonChangePassword = findViewById(R.id.btn_change_password);
         buttonAddNewNote = findViewById(R.id.btn_add_note);
+
 
 
         buttonLogout.setOnClickListener(view -> logOut());
 
         buttonChangePassword.setOnClickListener(view -> showPasswordChangeDialog(current_username_hashed));
 
-        buttonAddNewNote.setOnClickListener(view -> {
-            showAddNewNoteDialog();
-        });
+        buttonAddNewNote.setOnClickListener(view -> showAddNewNoteDialog());
 
     }
-
-
-
-
-
-
 
     private void logOut(){
         Toast.makeText(getApplicationContext(), "Logout Successful!", Toast.LENGTH_SHORT).show();
@@ -82,8 +70,6 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-
 
 
     private void showPasswordChangeDialog(String hashedEmail){
@@ -158,13 +144,51 @@ public class MainActivity extends AppCompatActivity {
                 note.setTitle(title);
                 note.setContent(content);
 
+
                 noteList.add(note);
 
-                saveNotesToPreferences();
+                saveNotesToPreferences("add");
                 createNoteView(note);
             }
 
             Toast.makeText(MainActivity.this, "Note saved!", Toast.LENGTH_SHORT).show();
+        });
+
+        builder.setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
+
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+
+    private void showEditNoteDialog(Note note){
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.create_note_dialog, null);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        builder.setTitle("Edit note");
+
+        builder.setPositiveButton("Save", (dialogInterface, i) -> {
+            EditText noteTitleEditText = dialogView.findViewById(R.id.noteTitleEditText);
+            EditText noteContentEditText = dialogView.findViewById(R.id.noteContentEditText);
+
+            String title = noteTitleEditText.getText().toString();
+            String content = noteContentEditText.getText().toString();
+
+            if (!title.isEmpty() && !content.isEmpty()){
+                deleteNoteAndRefresh(note);
+
+                note.setTitle(title);
+                note.setContent(content);
+
+
+                noteList.add(note);
+
+                saveNotesToPreferences("add");
+                createNoteView(note);
+            }
+
+            Toast.makeText(MainActivity.this, "Note Edited!", Toast.LENGTH_SHORT).show();
         });
 
         builder.setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -220,28 +244,14 @@ public class MainActivity extends AppCompatActivity {
         return sharedPreferences.getString("user_" + hashedEmail, "err");
     }
 
-    private void saveNote(){
-        EditText noteTitleEditText = findViewById(R.id.noteTitleEditText);
-        EditText noteContentEditText = findViewById(R.id.noteContentEditText);
 
-        String title = noteTitleEditText.getText().toString();
-        String content = noteContentEditText.getText().toString();
-
-        if (!title.isEmpty() && !content.isEmpty()){
-            Note note = new Note();
-            note.setTitle(title);
-            note.setContent(content);
-
-            noteList.add(note);
-            saveNotesToPreferences();
-
-            //createNoteView(note);
-        }
-    }
-
-    private void saveNotesToPreferences(){
+    private void saveNotesToPreferences(String mode){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NOTES_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        if (mode.equals("del")){
+            editor.clear();
+        }
+
 
         editor.putInt("notecount_" + HASHED_EMAIL, noteList.size());
         for(int i=0; i<noteList.size(); i++){
@@ -251,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
         }
         editor.apply();
     }
+
 
     private void loadNotesFromPreferences(){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NOTES_NAME, MODE_PRIVATE);
@@ -268,16 +279,54 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void createNoteView(final Note note){
         View noteView = getLayoutInflater().inflate(R.layout.note_item, null);
         TextView noteTitleTextView = noteView.findViewById(R.id.noteTitleTextView);
         TextView noteContentTextView = noteView.findViewById(R.id.noteContentTextView);
+        Button deleteNoteDutton = noteView.findViewById(R.id.btnDeleteNote);
 
         noteTitleTextView.setText(note.getTitle());
         noteContentTextView.setText(note.getContent());
 
+        deleteNoteDutton.setOnClickListener(view -> {
+            showDeleteDialog(note);
+        });
+
+        noteView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+
+                showEditNoteDialog(note);
+
+                return true;
+            }
+        });
+
         notesContainer.addView(noteView);
 
+
+
+    }
+
+    private void showDeleteDialog(final Note note){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Delete this note");
+        builder.setMessage("Are you sure you want to delete it?");
+        builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                deleteNoteAndRefresh(note);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
+    }
+
+    private void deleteNoteAndRefresh(Note note){
+        noteList.remove(note);
+        saveNotesToPreferences("del");
+        refreshNotesView();
     }
 
     private void refreshNotesView(){
@@ -290,8 +339,6 @@ public class MainActivity extends AppCompatActivity {
             createNoteView(note);
         }
     }
-
-
 
 }
 
