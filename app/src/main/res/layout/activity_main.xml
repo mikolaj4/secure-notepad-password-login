@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    android:padding="10dp">
 
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="5dp">
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_logout"
@@ -20,7 +20,6 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:padding="5dp"
             android:background="@drawable/rectangular_button_background"
             android:text="Log Out" />
 
@@ -30,7 +29,6 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:padding="5dp"
             android:background="@drawable/rectangular_button_background"
             android:text="Change Password" />
 
@@ -39,11 +37,31 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:padding="5dp"
             android:background="@drawable/rectangular_button_background"
             android:text="Add Note" />
 
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:layout_marginTop="15dp"
+        android:text="Notes:"
+        android:textStyle="bold"/>
+
+    <ScrollView
+        android:id="@+id/notesScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/notesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
+
+    </ScrollView>
 
 
 </LinearLayout>
