@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             loadNotesFromPreferencesToList();
         } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
+            Log.e("From MainActivity", "Error : Caused by loadNotesFromPreferencesToList" + e.getMessage(), e);
         }
 
         displayNotes();
@@ -120,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     updatePassword(hashedEmail, newPassword);
                 } catch (GeneralSecurityException e) {
-                    throw new RuntimeException(e);
+                    Log.e("From MainActivity", "Error : Caused by updatePassword" + e.getMessage(), e);
                 }
             } else {
                 Toast.makeText(MainActivity.this, "New passwords don't match!", Toast.LENGTH_SHORT).show();
@@ -158,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     saveNotesToPreferences("add");
                 } catch (GeneralSecurityException e) {
-                    throw new RuntimeException(e);
+                    Log.e("From MainActivity", "Error : Caused by saveNotesToPreferences" + e.getMessage(), e);
                 }
                 createNoteView(note);
 
@@ -194,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     deleteNoteAndRefresh(note);
                 } catch (GeneralSecurityException e) {
-                    throw new RuntimeException(e);
+                    Log.e("From MainActivity", "Error : Caused by deleteNoteAndRefresh" + e.getMessage(), e);
                 }
 
                 note.setTitle(title);
@@ -205,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     saveNotesToPreferences("add");
                 } catch (GeneralSecurityException e) {
-                    throw new RuntimeException(e);
+                    Log.e("From MainActivity", "Error : Caused by saveNotesToPreferences" + e.getMessage(), e);
                 }
                 createNoteView(note);
             }else {
@@ -229,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 deleteNoteAndRefresh(note);
             } catch (GeneralSecurityException e) {
-                throw new RuntimeException(e);
+                Log.e("From MainActivity", "Error : Caused by deleteNoteAndRefresh" + e.getMessage(), e);
             }
         });
         builder.setNegativeButton("Cancel", null);
