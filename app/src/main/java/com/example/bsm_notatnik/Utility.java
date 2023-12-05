@@ -25,10 +25,10 @@ public class Utility {
         byte[] emailSalt;
         emailSalt = getFirst16BytesOfHash(email);
 
-        return hashCredential(email, emailSalt);
+        return hashCredential(email, emailSalt, 1000);
     }
-    protected static String hashCredential(String credential, byte[] salt){
-        int iteratiions = 1000;
+    protected static String hashCredential(String credential, byte[] salt, int iterations){
+        int iteratiions = iterations;
         int keyLen = 256;
 
         KeySpec keySpec = new PBEKeySpec(credential.toCharArray(), salt, iteratiions, keyLen);

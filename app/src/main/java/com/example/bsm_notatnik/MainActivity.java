@@ -3,6 +3,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -14,32 +15,53 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 
 public class MainActivity extends AppCompatActivity {
+    private CryptoManager cryptoManager;
 
     Button buttonLogout, buttonChangePassword, buttonAddNewNote;
     private static final String SHARED_NAME_CREDENTIALS = "Credentials";
     private static final String SHARED_NOTES_NAME = "Notes";
     private static String HASHED_EMAIL = "";
+    private static String KEY_HASH = "";
     private List<Note> noteList;
     private LinearLayout notesContainer;
 
+    private static final String ALGORITHM = "AES";
+    private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        try {
+            cryptoManager = new CryptoManager();
+        } catch (Exception e) {
+            e.printStackTrace(); // Handle exceptions according to your needs
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         Intent intent = getIntent();
         String current_username_hashed = intent.getStringExtra("CURRENT_USER_EMAIL_HASH");
         HASHED_EMAIL = current_username_hashed;
+        KEY_HASH = intent.getStringExtra("KEY_HASH");
 
         notesContainer = findViewById(R.id.notesContainer);
         noteList = new ArrayList<>();
@@ -49,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
         buttonLogout = findViewById(R.id.btn_logout);
         buttonChangePassword = findViewById(R.id.btn_change_password);
         buttonAddNewNote = findViewById(R.id.btn_add_note);
+
+        Log.i("KURWAAAAAAAAAAAAAAAAA", KEY_HASH);
 
         buttonLogout.setOnClickListener(view -> logOut());
 
@@ -134,24 +158,32 @@ public class MainActivity extends AppCompatActivity {
         String newSaltString = Base64.getEncoder().encodeToString(newSalt);
         editor.putString("salt_" + hashedEmail, newSaltString);
 
-        String hashedNewPassword = Utility.hashCredential(newPassword, newSalt);
+        String hashedNewPassword = Utility.hashCredential(newPassword, newSalt, 1000);
         editor.putString("user_" + hashedEmail, hashedNewPassword);
         editor.apply();
     }
 
     private boolean validateOldPassword(String hashedEmail, String oldPassword){
-        byte[] salt = getSaltForUser(hashedEmail);
-        String hashedOldPassword = Utility.hashCredential(oldPassword, salt);
+        byte[] salt = getSaltForUser(hashedEmail, false);
+        String hashedOldPassword = Utility.hashCredential(oldPassword, salt, 1000);
         String hashedCorrectPassword = getPasswordFromShared(hashedEmail);
 
         assert hashedOldPassword != null;
         return hashedOldPassword.equals(hashedCorrectPassword);
     }
 
-    private byte[] getSaltForUser(String hashedEmail){
+    private byte[] getSaltForUser(String hashedEmail, boolean salt2){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        String saltFromData = sharedPreferences.getString("salt_" + hashedEmail, "err");
+        String saltFromData;
+
+        if (salt2){
+             saltFromData = sharedPreferences.getString("salt_2_" + hashedEmail, "err");
+        }
+        else {
+             saltFromData = sharedPreferences.getString("salt_" + hashedEmail, "err");
+        }
         return Base64.getDecoder().decode(saltFromData);
+
     }
 
     private String getPasswordFromShared(String hashedEmail){
@@ -241,9 +273,6 @@ public class MainActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
-    private void genSecretKey(){
-
-    }
 
     private void saveNotesToPreferences(String mode){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NOTES_NAME, MODE_PRIVATE);
@@ -259,9 +288,11 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("notecount_" + HASHED_EMAIL, noteList.size());
         for(int i=0; i<noteList.size(); i++){
             Note note = noteList.get(i);
-            editor.putString(i + "_title_" + HASHED_EMAIL, note.getTitle());
+            editor.putString(i + "_title_" + HASHED_EMAIL, encryptCesar(note.getTitle(), 2));
             editor.putString(i + "_content_" + HASHED_EMAIL, note.getContent());
+
         }
+
         editor.apply();
     }
 
@@ -275,7 +306,7 @@ public class MainActivity extends AppCompatActivity {
             String content = sharedPreferences.getString(i + "_content_" + HASHED_EMAIL, "");
 
             Note note = new Note();
-            note.setTitle(title);
+            note.setTitle(decryptCesar(title, 2));
             note.setContent(content);
 
             noteList.add(note);
@@ -333,20 +364,91 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private static final byte[] CONSTANT_IV = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
 
+    // Function to encrypt a message using AES in CBC mode with a constant IV
+    public static String encrypt(String data, String key) {
+        try {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 
+            // Use the constant IV
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(CONSTANT_IV);
 
+            // Create a SecretKeySpec using the provided key
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), ALGORITHM);
 
+            // Initialize the cipher for encryption
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
 
+            // Encrypt the data
+            byte[] encryptedBytes = cipher.doFinal(data.getBytes());
 
+            // Combine IV and encrypted data for later decryption
+            byte[] combined = new byte[CONSTANT_IV.length + encryptedBytes.length];
+            System.arraycopy(CONSTANT_IV, 0, combined, 0, CONSTANT_IV.length);
+            System.arraycopy(encryptedBytes, 0, combined, CONSTANT_IV.length, encryptedBytes.length);
 
+            // Base64 encode the result for easy storage and transmission
+            return Base64.getEncoder().encodeToString(combined);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
+    // Function to decrypt a message using AES in CBC mode with a constant IV
+    public static String decrypt(String encryptedData, String key) {
+        try {
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
 
+            // Decode the Base64-encoded input
+            byte[] combined = Base64.getDecoder().decode(encryptedData);
 
+            // Extract IV from the combined data
+            byte[] iv = new byte[CONSTANT_IV.length];
+            System.arraycopy(combined, 0, iv, 0, CONSTANT_IV.length);
+            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
 
+            // Create a SecretKeySpec using the provided key
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key.getBytes(), ALGORITHM);
 
+            // Initialize the cipher for decryption
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
 
+            // Decrypt the data
+            byte[] decryptedBytes = cipher.doFinal(combined, CONSTANT_IV.length, combined.length - CONSTANT_IV.length);
+
+            return new String(decryptedBytes);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Function to encrypt a message using Caesar Cipher
+    public static String encryptCesar(String message, int key) {
+        StringBuilder encryptedMessage = new StringBuilder();
+
+        for (char character : message.toCharArray()) {
+            if (Character.isLetter(character)) {
+                char base = Character.isUpperCase(character) ? 'A' : 'a';
+                char encryptedChar = (char) ((character - base + key) % 26 + base);
+                encryptedMessage.append(encryptedChar);
+            } else {
+                // Keep non-alphabetic characters unchanged
+                encryptedMessage.append(character);
+            }
+        }
+
+        return encryptedMessage.toString();
+    }
+
+    // Function to decrypt a message using Caesar Cipher with a key
+    public static String decryptCesar(String encryptedMessage, int key) {
+        return encryptCesar(encryptedMessage, 26 - (key % 26)); // Decryption is equivalent to shifting in the opposite direction
+    }
 
 
 

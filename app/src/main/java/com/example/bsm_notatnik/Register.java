@@ -102,7 +102,7 @@ public class Register extends AppCompatActivity {
                 saveSaltsForUser(hashedEmail, salt1, salt2);
 
 
-                hashedPassword = Utility.hashCredential(password, salt1);
+                hashedPassword = Utility.hashCredential(password, salt1, 1000);
 
                 saveNewUser(hashedEmail, hashedPassword);
 

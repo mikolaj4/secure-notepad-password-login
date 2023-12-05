@@ -96,9 +96,9 @@ public class Login extends AppCompatActivity {
         String passwordHashFromData = sharedPreferences.getString("user_" + hashedemail, "err");
 
 
-        byte[] salt = getSaltForUser(hashedemail);
+        byte[] salt = getSaltForUser(hashedemail, false);
 
-        String inputPasswordHash = Utility.hashCredential(password, salt);
+        String inputPasswordHash = Utility.hashCredential(password, salt, 1000);
 
         assert inputPasswordHash != null;
 
@@ -107,6 +107,7 @@ public class Login extends AppCompatActivity {
 
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.putExtra("CURRENT_USER_EMAIL_HASH", hashedemail);
+            intent.putExtra("KEY_HASH", genKeyHash(hashedemail, password));
             startActivity(intent);
             finish();
 
@@ -116,10 +117,23 @@ public class Login extends AppCompatActivity {
         }
     }
 
-    private byte[] getSaltForUser(String hashedemail){
+    private String genKeyHash(String hashedemail, String password){
+        byte[] salt2 = getSaltForUser(hashedemail, true);
+        return Utility.hashCredential(password, salt2, 5000);
+    }
+
+    private byte[] getSaltForUser(String hashedEmail, boolean salt2){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
-        String saltFromData = sharedPreferences.getString("salt_" + hashedemail, "err");
+        String saltFromData;
+
+        if (salt2){
+            saltFromData = sharedPreferences.getString("salt_2_" + hashedEmail, "err");
+        }
+        else {
+            saltFromData = sharedPreferences.getString("salt_" + hashedEmail, "err");
+        }
         return Base64.getDecoder().decode(saltFromData);
+
     }
 
 }
