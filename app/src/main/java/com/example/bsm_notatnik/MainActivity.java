@@ -14,27 +14,21 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -42,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String SHARED_NAME_CREDENTIALS = "Credentials";
     private static final String SHARED_NAME_NOTES = "Notes";
     private static String HASHED_EMAIL = "";
-    private static String KEY = "";
+    private static String PAS = "";
     private List<Note> noteList;
     private LinearLayout notesContainer;
 
@@ -55,25 +49,14 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String current_username_hashed = intent.getStringExtra("CURRENT_USER_EMAIL_HASH");
         HASHED_EMAIL = current_username_hashed;
-        KEY = intent.getStringExtra("KEY");
+        PAS = intent.getStringExtra("PAS");
 
         notesContainer = findViewById(R.id.notesContainer);
         noteList = new ArrayList<>();
+
         try {
             loadNotesFromPreferencesToList();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeySpecException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidAlgorithmParameterException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchPaddingException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalBlockSizeException e) {
-            throw new RuntimeException(e);
-        } catch (BadPaddingException e) {
-            throw new RuntimeException(e);
-        } catch (InvalidKeyException e) {
+        } catch (GeneralSecurityException e) {
             throw new RuntimeException(e);
         }
 
@@ -94,8 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void logOut(){
-        Toast.makeText(getApplicationContext(), "Logout Successful!", Toast.LENGTH_SHORT).show();
-
         Intent intent = new Intent(getApplicationContext(), Login.class);
         startActivity(intent);
         finish();
@@ -137,23 +118,9 @@ public class MainActivity extends AppCompatActivity {
             if (newPassword.equals(confirmPassword)) {
                 try {
                     updatePassword(hashedEmail, newPassword);
-                } catch (InvalidAlgorithmParameterException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalBlockSizeException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeySpecException e) {
-                    throw new RuntimeException(e);
-                } catch (BadPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeyException e) {
+                } catch (GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
-
-                Toast.makeText(MainActivity.this, "Password Changed", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(MainActivity.this, "New passwords don't match!", Toast.LENGTH_SHORT).show();
             }
@@ -189,19 +156,7 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     saveNotesToPreferences("add");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeySpecException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidAlgorithmParameterException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalBlockSizeException e) {
-                    throw new RuntimeException(e);
-                } catch (BadPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeyException e) {
+                } catch (GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
                 createNoteView(note);
@@ -236,19 +191,7 @@ public class MainActivity extends AppCompatActivity {
             if (!title.isEmpty() && !content.isEmpty()){
                 try {
                     deleteNoteAndRefresh(note);
-                } catch (InvalidAlgorithmParameterException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalBlockSizeException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeySpecException e) {
-                    throw new RuntimeException(e);
-                } catch (BadPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeyException e) {
+                } catch (GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -259,26 +202,13 @@ public class MainActivity extends AppCompatActivity {
 
                 try {
                     saveNotesToPreferences("add");
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeySpecException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidAlgorithmParameterException e) {
-                    throw new RuntimeException(e);
-                } catch (NoSuchPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (IllegalBlockSizeException e) {
-                    throw new RuntimeException(e);
-                } catch (BadPaddingException e) {
-                    throw new RuntimeException(e);
-                } catch (InvalidKeyException e) {
+                } catch (GeneralSecurityException e) {
                     throw new RuntimeException(e);
                 }
                 createNoteView(note);
             }else {
                 Toast.makeText(MainActivity.this, "Enter title and content!", Toast.LENGTH_SHORT).show();
             }
-
 
         });
 
@@ -296,19 +226,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("Delete", (dialogInterface, i) -> {
             try {
                 deleteNoteAndRefresh(note);
-            } catch (InvalidAlgorithmParameterException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchPaddingException e) {
-                throw new RuntimeException(e);
-            } catch (IllegalBlockSizeException e) {
-                throw new RuntimeException(e);
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            } catch (InvalidKeySpecException e) {
-                throw new RuntimeException(e);
-            } catch (BadPaddingException e) {
-                throw new RuntimeException(e);
-            } catch (InvalidKeyException e) {
+            } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -340,14 +258,14 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("user_" + hashedEmail, hashedNewPassword);
         editor.apply();
 
-        KEY = newPassword;
+        PAS = newPassword;
         saveNotesToPreferences("");
     }
 
     private boolean validateOldPassword(String hashedEmail, String oldPassword){
         byte[] salt = getSaltForUser(hashedEmail, false);
         String hashedOldPassword = Utility.hashCredential(oldPassword, salt, 1000);
-        String hashedCorrectPassword = gerPasswrodHashFromShared(hashedEmail);
+        String hashedCorrectPassword = gerPasswordHashFromShared(hashedEmail);
 
         assert hashedOldPassword != null;
         return hashedOldPassword.equals(hashedCorrectPassword);
@@ -367,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private String gerPasswrodHashFromShared(String hashedEmail){
+    private String gerPasswordHashFromShared(String hashedEmail){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         return sharedPreferences.getString("user_" + hashedEmail, "err");
     }
@@ -386,10 +304,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        //tutaj muszę wygenerować randomowy iv. Używam go do enkrypcji i zapisuje do shared jako string
+        IvParameterSpec iv = UtilityAES.generateIv();
+        String ivString = ivToString(iv);
+        saveIvStringToShared(ivString);
+
         editor.putInt("notecount_" + HASHED_EMAIL, noteList.size());
         for(int i=0; i<noteList.size(); i++){
             Note note = noteList.get(i);
-            editor.putString(i + "_title_" + HASHED_EMAIL, encrypt("AES/CBC/PKCS5Padding", note.getTitle(), getKeyFromPassword(KEY, getSaltForUser(HASHED_EMAIL, true)), generateIv()));
+            editor.putString(i + "_title_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getTitle(), UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv));
             editor.putString(i + "_content_" + HASHED_EMAIL, note.getContent());
 
         }
@@ -397,62 +320,56 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    public static SecretKey getKeyFromPassword(String password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
-
-        return secret;
-    }
-
 
     private void loadNotesFromPreferencesToList() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
         int noteCount = sharedPreferences.getInt("notecount_" + HASHED_EMAIL, 0);
+
+        //tutaj muszę pobrać iv z shared i skonvertować do dobrego formatu
+        String ivString = getIVStringFromShared();
+        IvParameterSpec iv = stringToIv(ivString);
 
         for(int i=0; i<noteCount; i++){
             String title = sharedPreferences.getString(i + "_title_" + HASHED_EMAIL, "");
             String content = sharedPreferences.getString(i + "_content_" + HASHED_EMAIL, "");
 
             Note note = new Note();
-            note.setTitle(decrypt("AES/CBC/PKCS5Padding", title, getKeyFromPassword(KEY, getSaltForUser(HASHED_EMAIL, true)), generateIv()) );
+            note.setTitle(UtilityAES.decrypt("AES/CBC/PKCS5Padding", title, UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv) );
             note.setContent(content);
 
             noteList.add(note);
         }
+
     }
 
-    private static final byte[] FIXED_IV = {
-            0x01, 0x02, 0x03, 0x04,
-            0x05, 0x06, 0x07, 0x08,
-            0x09, 0x0A, 0x0B, 0x0C,
-            0x0D, 0x0E, 0x0F, 0x10
-    };
+    private void saveIvStringToShared(String ivString){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
-    public static IvParameterSpec generateIv() {
-        return new IvParameterSpec(Arrays.copyOf(FIXED_IV, FIXED_IV.length));
+        editor.putString("iv_" + HASHED_EMAIL, ivString);
+
+        editor.apply();
     }
 
-    public static String encrypt(String algorithm, String input, SecretKey key, IvParameterSpec iv) throws
-            NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException {
-
-        Cipher cipher = Cipher.getInstance(algorithm);
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-        byte[] cipherText = cipher.doFinal(input.getBytes());
-        return Base64.getEncoder().encodeToString(cipherText);
+    private String getIVStringFromShared(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
+        String ivString = sharedPreferences.getString("iv_" + HASHED_EMAIL, "err");
+        return ivString;
     }
 
-    public static String decrypt(String algorithm, String cipherText, SecretKey key, IvParameterSpec iv) throws NoSuchPaddingException, NoSuchAlgorithmException,
-            InvalidAlgorithmParameterException, InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException{
-
-        Cipher cipher = Cipher.getInstance(algorithm);
-        cipher.init(Cipher.DECRYPT_MODE, key, iv);
-        byte[] plainText = cipher.doFinal(Base64.getDecoder().decode(cipherText));
-        return new String(plainText);
+    private static IvParameterSpec stringToIv(String ivString) {
+        byte[] ivBytes = Base64.getDecoder().decode(ivString);
+        return new IvParameterSpec(ivBytes);
     }
+
+    private static String ivToString(IvParameterSpec ivParameterSpec) {
+        byte[] ivBytes = ivParameterSpec.getIV();
+        return Base64.getEncoder().encodeToString(ivBytes);
+    }
+
+
+
+
 
 
     private void createNoteView(final Note note){

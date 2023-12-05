@@ -115,7 +115,7 @@ public class Login extends AppCompatActivity {
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.putExtra("CURRENT_USER_EMAIL_HASH", hashedemail);
             //intent.putExtra("KEY", getKeyFromPassword(password, getSalt2(hashedemail)));
-            intent.putExtra("KEY", password);
+            intent.putExtra("PAS", password);
             startActivity(intent);
             finish();
 
