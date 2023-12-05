@@ -23,6 +23,7 @@ import java.util.Base64;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Login extends AppCompatActivity {
 
@@ -79,7 +80,13 @@ public class Login extends AppCompatActivity {
                     return;
                 }
 
-                login(hashedEmail, password);
+                try {
+                    login(hashedEmail, password);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                } catch (InvalidKeySpecException e) {
+                    throw new RuntimeException(e);
+                }
                 //progressBar.setVisibility(View.GONE);
             }
         });
@@ -91,7 +98,7 @@ public class Login extends AppCompatActivity {
         return sharedPreferences.contains("user_" + hashedemail);
     }
 
-    private void login(String hashedemail, String password){
+    private void login(String hashedemail, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         String passwordHashFromData = sharedPreferences.getString("user_" + hashedemail, "err");
 
@@ -107,7 +114,8 @@ public class Login extends AppCompatActivity {
 
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             intent.putExtra("CURRENT_USER_EMAIL_HASH", hashedemail);
-            intent.putExtra("KEY_HASH", genKeyHash(hashedemail, password));
+            //intent.putExtra("KEY", getKeyFromPassword(password, getSalt2(hashedemail)));
+            intent.putExtra("KEY", password);
             startActivity(intent);
             finish();
 
@@ -115,6 +123,15 @@ public class Login extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Wrong credentials!", Toast.LENGTH_SHORT).show();
             editTextPassword.setText("");
         }
+    }
+
+    public static SecretKey getKeyFromPassword(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
+        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
+
+        return secret;
     }
 
     private String genKeyHash(String hashedemail, String password){
@@ -134,6 +151,11 @@ public class Login extends AppCompatActivity {
         }
         return Base64.getDecoder().decode(saltFromData);
 
+    }
+
+    private String getSalt2(String hashedEmail){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
+        return sharedPreferences.getString("salt_2_" + hashedEmail, "err");
     }
 
 }
