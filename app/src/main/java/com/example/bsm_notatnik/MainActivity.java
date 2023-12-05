@@ -1,4 +1,5 @@
 package com.example.bsm_notatnik;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if(!validatePassword(newPassword)){
-                Toast.makeText(MainActivity.this, "Wrong format of new password!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "New password to weak!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -160,9 +161,10 @@ public class MainActivity extends AppCompatActivity {
                     throw new RuntimeException(e);
                 }
                 createNoteView(note);
+
+                Toast.makeText(MainActivity.this, "Note saved!", Toast.LENGTH_SHORT).show();
             }
 
-            Toast.makeText(MainActivity.this, "Note saved!", Toast.LENGTH_SHORT).show();
         });
 
         builder.setNegativeButton("Cancel", (dialogInterface, i) -> dialogInterface.dismiss());
@@ -239,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private boolean validatePassword(String password){
-        final String PASSWORD_PATTERN = "^.{6,}$";
+        final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[A-Z])(.{8,})$";
         Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
         Matcher matcher = pattern.matcher(password);
 
@@ -254,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
         String newSaltString = Base64.getEncoder().encodeToString(newSalt);
         editor.putString("salt_" + hashedEmail, newSaltString);
 
-        String hashedNewPassword = Utility.hashCredential(newPassword, newSalt, 1000);
+        String hashedNewPassword = Utility.hashCredential(newPassword, newSalt);
         editor.putString("user_" + hashedEmail, hashedNewPassword);
         editor.apply();
 
@@ -264,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean validateOldPassword(String hashedEmail, String oldPassword){
         byte[] salt = getSaltForUser(hashedEmail, false);
-        String hashedOldPassword = Utility.hashCredential(oldPassword, salt, 1000);
+        String hashedOldPassword = Utility.hashCredential(oldPassword, salt);
         String hashedCorrectPassword = gerPasswordHashFromShared(hashedEmail);
 
         assert hashedOldPassword != null;
@@ -313,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i<noteList.size(); i++){
             Note note = noteList.get(i);
             editor.putString(i + "_title_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getTitle(), UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv));
-            editor.putString(i + "_content_" + HASHED_EMAIL, note.getContent());
+            editor.putString(i + "_content_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getContent(), UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv));
 
         }
 
@@ -335,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
 
             Note note = new Note();
             note.setTitle(UtilityAES.decrypt("AES/CBC/PKCS5Padding", title, UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv) );
-            note.setContent(content);
+            note.setContent(UtilityAES.decrypt("AES/CBC/PKCS5Padding", content, UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv) );
 
             noteList.add(note);
         }
@@ -353,8 +355,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String getIVStringFromShared(){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
-        String ivString = sharedPreferences.getString("iv_" + HASHED_EMAIL, "err");
-        return ivString;
+        return sharedPreferences.getString("iv_" + HASHED_EMAIL, "err");
     }
 
     private static IvParameterSpec stringToIv(String ivString) {
@@ -369,19 +370,16 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
-
-
     private void createNoteView(final Note note){
-        View noteView = getLayoutInflater().inflate(R.layout.note_item, null);
+        @SuppressLint("InflateParams") View noteView = getLayoutInflater().inflate(R.layout.note_item, null);
         TextView noteTitleTextView = noteView.findViewById(R.id.noteTitleTextView);
         TextView noteContentTextView = noteView.findViewById(R.id.noteContentTextView);
-        Button deleteNoteDutton = noteView.findViewById(R.id.btnDeleteNote);
+        Button deleteNoteButton = noteView.findViewById(R.id.btnDeleteNote);
 
         noteTitleTextView.setText(note.getTitle());
         noteContentTextView.setText(note.getContent());
 
-        deleteNoteDutton.setOnClickListener(view -> showDeleteDialog(note));
+        deleteNoteButton.setOnClickListener(view -> showDeleteDialog(note));
 
         noteView.setOnLongClickListener(view -> {
             showEditNoteDialog(note);
