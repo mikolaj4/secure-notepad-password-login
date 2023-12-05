@@ -12,16 +12,7 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.Base64;
 
 import java.util.regex.Matcher;
@@ -106,10 +97,12 @@ public class Register extends AppCompatActivity {
 
 
 
-                byte[] salt = Utility.generateSalt();
-                saveSaltForUser(hashedEmail, salt);
+                byte[] salt1 = Utility.generateSalt();
+                byte[] salt2 = Utility.generateSalt();
+                saveSaltsForUser(hashedEmail, salt1, salt2);
 
-                hashedPassword = Utility.hashCredential(password, salt);
+
+                hashedPassword = Utility.hashCredential(password, salt1);
 
                 saveNewUser(hashedEmail, hashedPassword);
 
@@ -143,12 +136,17 @@ public class Register extends AppCompatActivity {
         return matcher.matches();
     }
 
-    private void saveSaltForUser(String hashedemail, byte[] salt){
+    private void saveSaltsForUser(String hashedemail, byte[] salt1, byte[] salt2){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        String saltString = Base64.getEncoder().encodeToString(salt);
-        editor.putString("salt_" + hashedemail, saltString);
+        String salt1String = Base64.getEncoder().encodeToString(salt1);
+        String salt2String = Base64.getEncoder().encodeToString(salt2);
+
+        editor.putString("salt_" + hashedemail, salt1String);
+        editor.putString("salt_2_" + hashedemail, salt2String);
+
+
         editor.apply();
     }
 
