@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -312,11 +313,16 @@ public class MainActivity extends AppCompatActivity {
         String ivString = ivToString(iv);
         saveIvStringToShared(ivString);
 
+        //tutaj generuje randomową sól2 używam ją do enkrypcji i zapisuje do skared
+        byte[] salt2 = Utility.generateSalt();
+        String salt2String = salt2BytesToString(salt2);
+        saveSalt2StringToPrefs(salt2String);
+
         editor.putInt("notecount_" + HASHED_EMAIL, noteList.size());
         for(int i=0; i<noteList.size(); i++){
             Note note = noteList.get(i);
-            editor.putString(i + "_title_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getTitle(), UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv));
-            editor.putString(i + "_content_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getContent(), UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv));
+            editor.putString(i + "_title_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getTitle(), UtilityAES.getKeyFromPassword(PAS, salt2), iv));
+            editor.putString(i + "_content_" + HASHED_EMAIL, UtilityAES.encrypt("AES/CBC/PKCS5Padding", note.getContent(), UtilityAES.getKeyFromPassword(PAS, salt2), iv));
 
         }
 
@@ -332,21 +338,49 @@ public class MainActivity extends AppCompatActivity {
         String ivString = getIVStringFromShared();
         IvParameterSpec iv = stringToIv(ivString);
 
+        //tutaj pobieram sól2 z shared i używam do dekrypcji
+        String saltStringFromShared = getStringSaltFromShared();
+        byte[] salt2 = stringSalt2toSalt(saltStringFromShared);
+
         for(int i=0; i<noteCount; i++){
             String title = sharedPreferences.getString(i + "_title_" + HASHED_EMAIL, "");
             String content = sharedPreferences.getString(i + "_content_" + HASHED_EMAIL, "");
 
             Note note = new Note();
-            note.setTitle(UtilityAES.decrypt("AES/CBC/PKCS5Padding", title, UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv) );
-            note.setContent(UtilityAES.decrypt("AES/CBC/PKCS5Padding", content, UtilityAES.getKeyFromPassword(PAS, getSaltForUser(HASHED_EMAIL, true)), iv) );
+            //getSaltForUser(HASHED_EMAIL, true)
+            note.setTitle(UtilityAES.decrypt("AES/CBC/PKCS5Padding", title, UtilityAES.getKeyFromPassword(PAS, salt2), iv));
+            note.setContent(UtilityAES.decrypt("AES/CBC/PKCS5Padding", content, UtilityAES.getKeyFromPassword(PAS, salt2), iv));
 
             noteList.add(note);
         }
 
     }
 
-    private void saveIvStringToShared(String ivString){
+    private void saveSalt2StringToPrefs(String salt){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("salt_2_" + HASHED_EMAIL, salt);
+
+        editor.apply();
+    }
+
+    private String getStringSaltFromShared(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
+        return sharedPreferences.getString("salt_2_" + HASHED_EMAIL, "err");
+    }
+
+    private static byte[] stringSalt2toSalt(String salt2) {
+        return Base64.getDecoder().decode(salt2);
+    }
+
+    private static String salt2BytesToString(byte[] salt2) {
+        return Base64.getEncoder().encodeToString(salt2);
+    }
+
+
+    private void saveIvStringToShared(String ivString){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("iv_" + HASHED_EMAIL, ivString);
@@ -354,8 +388,10 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
+
+
     private String getIVStringFromShared(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         return sharedPreferences.getString("iv_" + HASHED_EMAIL, "err");
     }
 
