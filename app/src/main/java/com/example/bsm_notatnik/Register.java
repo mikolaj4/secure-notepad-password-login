@@ -84,9 +84,7 @@ public class Register extends AppCompatActivity {
             }
 
             byte[] salt1 = Utility.generateSalt();
-            byte[] salt2 = Utility.generateSalt();
-
-            saveSaltsForUser(hashedEmail, salt1, salt2);
+            saveSaltForUser(hashedEmail, salt1);
 
             hashedPassword = Utility.hashCredential(password, salt1);
 
@@ -121,15 +119,12 @@ public class Register extends AppCompatActivity {
         return matcher.matches();
     }
 
-    private void saveSaltsForUser(String hashedEmail, byte[] salt1, byte[] salt2){
+    private void saveSaltForUser(String hashedEmail, byte[] salt1){
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         String salt1String = Base64.getEncoder().encodeToString(salt1);
-        String salt2String = Base64.getEncoder().encodeToString(salt2);
-
         editor.putString("salt_" + hashedEmail, salt1String);
-        editor.putString("salt_2_" + hashedEmail, salt2String);
 
         editor.apply();
     }
