@@ -12,7 +12,7 @@ Głównym celem projektu jest zastosowanie jak najlepszych mechanizmów szyfruj�
 
 ### Zrzuty ekranu z działania aplikacji
 
-<img src="screenshots/register.png" alt="Register screen" style="max-width: 40%;" >
+<img src="screenshots/register.png" alt="Register screen" style="max-width: 200px;" >
 
 <img src="screenshots/main_screen.png" alt="Main screen" style="max-width: 40%;" >
 
