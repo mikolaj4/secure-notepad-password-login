@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
     private void logOut(){
         Intent intent = new Intent(getApplicationContext(), Login.class);
         startActivity(intent);
