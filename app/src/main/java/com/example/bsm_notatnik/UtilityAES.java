@@ -24,9 +24,8 @@ public class UtilityAES {
 
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 256);
-        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
 
-        return secret;
+        return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
     }
 
     public static String encrypt(String algorithm, String input, SecretKey key, IvParameterSpec iv) throws

@@ -36,27 +36,24 @@ public class Register extends AppCompatActivity {
         buttonReg = findViewById(R.id.btn_register);
         loginNowTextView = findViewById(R.id.loginNow);
 
-        //goes to login page
         loginNowTextView.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), Login.class);
             startActivity(intent);
-            finish(); // finishes current activity
+            finish();
         });
 
 
-        //when register button is clicked
         buttonReg.setOnClickListener(view -> {
             String email, hashedEmail, password, hashedPassword;
 
             email = String.valueOf(editTextEmail.getText());
             password = String.valueOf(editTextPassword.getText());
 
-            //checks if email field is not empty
             if (TextUtils.isEmpty(email)){
                 Toast.makeText(Register.this, "Enter email!", Toast.LENGTH_SHORT).show();
                 return;
             }
-            //checks if password field is not empty
+
             if (TextUtils.isEmpty(password)){
                 Toast.makeText(Register.this, "Enter password!", Toast.LENGTH_SHORT).show();
                 return;
@@ -64,22 +61,22 @@ public class Register extends AppCompatActivity {
 
             hashedEmail = Utility.hashEmail(email);
 
-            //checks if given username is already registered in database
+
             if (checkIfUserExists(hashedEmail)){
                 editTextEmail.setText("");
                 editTextPassword.setText("");
                 Toast.makeText(Register.this, "Account with this username already exists!", Toast.LENGTH_SHORT).show();
                 return;
             }
-            //checks if email has correct format
+
             if (!validateEmail(email)){
                 editTextPassword.setText("");
                 Toast.makeText(Register.this, "Email format not correct!", Toast.LENGTH_SHORT).show();
                 return;
             }
-            //checks password requirements
-            if (!validatePassword(password)){
-                Toast.makeText(Register.this, "Password to weak!", Toast.LENGTH_SHORT).show();
+
+           if (!Utility.validatePassword(password)){
+                Toast.makeText(Register.this, "Password to short! Must have at least 7 characters.", Toast.LENGTH_SHORT).show();
                 return;
             }
 

@@ -21,7 +21,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:background="@drawable/rectangular_button_background"
-            android:text="Log Out" />
+            android:text="@string/log_out" />
 
         <Button
             android:id="@+id/btn_change_password"
@@ -30,7 +30,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:background="@drawable/rectangular_button_background"
-            android:text="Change Password" />
+            android:text="@string/change_password" />
 
         <Button
             android:id="@+id/btn_add_note"
@@ -38,7 +38,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@drawable/rectangular_button_background"
-            android:text="Add Note" />
+            android:text="@string/add_note" />
 
     </LinearLayout>
 
@@ -46,7 +46,7 @@
         android:layout_width="match_parent"
         android:layout_height="18dp"
         android:layout_marginTop="15dp"
-        android:text="Notes:"
+        android:text="@string/notes"
         android:textStyle="bold"/>
 
     <ScrollView

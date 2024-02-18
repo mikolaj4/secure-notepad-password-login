@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="Note Title"
+            android:text="@string/note_title"
             />
 
         <TextView
@@ -25,7 +25,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Note Content"
+            android:text="@string/note_content"
             />
     </LinearLayout>
 

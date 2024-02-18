@@ -7,6 +7,8 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -57,6 +59,10 @@ public class Utility {
             e.printStackTrace();
             return null;
         }
+    }
+
+    protected static boolean validatePassword(String password){
+        return password.length() > 6;
     }
 
 

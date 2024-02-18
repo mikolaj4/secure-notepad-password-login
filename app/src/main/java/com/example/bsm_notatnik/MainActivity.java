@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            if(!validatePassword(newPassword)){
+            if(!Utility.validatePassword(newPassword)){
                 Toast.makeText(MainActivity.this, "New password to weak!", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -240,13 +240,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private boolean validatePassword(String password){
-        final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[A-Z])(.{8,})$";
-        Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
-        Matcher matcher = pattern.matcher(password);
 
-        return matcher.matches();
-    }
 
     private void updatePassword(String hashedEmail, String newPassword) throws InvalidAlgorithmParameterException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, InvalidKeySpecException, BadPaddingException, InvalidKeyException {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_CREDENTIALS, MODE_PRIVATE);
@@ -306,12 +300,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        //tutaj muszę wygenerować randomowy iv. Używam go do enkrypcji i zapisuje do shared jako string
         IvParameterSpec iv = UtilityAES.generateIv();
         String ivString = ivToString(iv);
         saveIvStringToShared(ivString);
 
-        //tutaj generuje randomową sól2 używam ją do enkrypcji i zapisuje do skared
         byte[] salt2Bytes = Utility.generateSalt();
         String salt2String = bytesToSalt2String(salt2Bytes);
         saveSalt2StringToPrefs(salt2String);
@@ -331,11 +323,9 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_NAME_NOTES, MODE_PRIVATE);
         int noteCount = sharedPreferences.getInt("notecount_" + HASHED_EMAIL, 0);
 
-        //tutaj muszę pobrać iv z shared i skonvertować do dobrego formatu
         String ivString = getIVStringFromShared();
         IvParameterSpec iv = stringToIv(ivString);
 
-        //tutaj pobieram sól2 z shared i używam do dekrypcji
         String salt2String = getSalt2StringFromShared();
         byte[] salt2Bytes = Salt2StringToBytes(salt2String);
 

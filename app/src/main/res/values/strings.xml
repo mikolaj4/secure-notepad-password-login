@@ -9,4 +9,13 @@
     <string name="click_to_login">Click to login</string>
     <string name="click_to_register">Click to register</string>
     <string name="logout_btn_txt">logout</string>
+    <string name="log_out">Log Out</string>
+    <string name="change_password">Change Password</string>
+    <string name="add_note">Add Note</string>
+    <string name="notes">Notes:</string>
+    <string name="note_title">Note Title</string>
+    <string name="note_content">Note Content</string>
+    <string name="enter_old_password">Enter Old Password</string>
+    <string name="enter_new_password">Enter New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
 </resources>
