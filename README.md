@@ -12,15 +12,15 @@ Głównym celem projektu jest zastosowanie jak najlepszych mechanizmów szyfruj�
 
 ### Zrzuty ekranu z działania aplikacji
 
-<img src="screenshots/register.png" alt="Register screen" style="width: 40%;" >
+<img src="screenshots/register.png" alt="Register screen" style="max-width: 40%;" >
 
-<img src="screenshots/main_screen.png" alt="Main screen" style="width: 40%;" >
+<img src="screenshots/main_screen.png" alt="Main screen" style="max-width: 40%;" >
 
-<img src="screenshots/create_note.png" alt="Create note" style="width: 40%;" >
+<img src="screenshots/create_note.png" alt="Create note" style="max-width: 40%;" >
 
-<img src="screenshots/change_password.png" alt="Change password" style="width: 40%;" >
+<img src="screenshots/change_password.png" alt="Change password" style="max-width: 40%;" >
 
-<img src="screenshots/delete_note.png" alt="Delete note" style="width: 40%;" >
+<img src="screenshots/delete_note.png" alt="Delete note" style="max-width: 40%;" >
 
 
 
